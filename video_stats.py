@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import os 
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv(dotenv_path="./.env")
 api_key = os.getenv("API_KEY")
@@ -87,7 +88,6 @@ def video_data(video_ids):
             url = f"https://youtube.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id={video_ids_str}&key={api_key}"  
             response = requests.get(url)
             data = response.json()
-            print(json.dumps(data, indent=4)) 
             print(f"Batch size: {len(batch)}")
             print(f"Items returned: {len(data.get('items', []))}")
 
@@ -112,6 +112,9 @@ def video_data(video_ids):
         raise e
     df2 = pd.DataFrame(extracted_data)
     print(df2)
+    load_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    df2.to_json(f'Data/Bronze/video_data_{load_id}.json', orient='records', indent=4)
+    print(f"Saved to Data/Bronze/extracted_video_data_{load_id}.json")
     return df2   
     
 
@@ -119,4 +122,5 @@ def video_data(video_ids):
 if __name__ == "__main__":
     playlist_id= getPlaylistId()
     video_ids = getVideoResult(playlist_id)
-    video_data(video_ids['videoId'].tolist()) 
+    video_data(video_ids['videoId'].tolist())  
+    
