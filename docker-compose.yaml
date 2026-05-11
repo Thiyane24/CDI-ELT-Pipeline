@@ -94,7 +94,7 @@ x-airflow-common:
   volumes:
     - ./config:/opt/airflow/config
     - ./dags:/opt/airflow/dags
-    - ./data:/opt/airflow/data
+    - ./Data:/opt/airflow/Data
     - ./include:/opt/airflow/include
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
