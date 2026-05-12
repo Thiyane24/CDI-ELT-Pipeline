@@ -2,6 +2,7 @@ from airflow import DAG
 import pendulum 
 from datetime import datetime, timedelta
 from Api.video_stats import getPlaylistId, getVideoResult, video_data
+from datawarehouse.dw import staging_table, core_table
 
 local_tz= pendulum.timezone("Asia/Kuala_Lumpur")
 
@@ -34,3 +35,18 @@ with DAG(
 
     # Define dependencies
     playlist_id >> video_ids >> extracted_data
+    
+with DAG(
+    dag_id= 'updated_db',
+    default_args=default_args,
+    description = 'DAG para passar os dados transformados para a base de dados',
+    schedule = '0 14 * * *',
+    catchup=False
+) as dag:
+
+    # Define Tasks
+    updated_staging = staging_table()
+    updated_core = core_table()
+
+    # Define dependencies
+    updated_staging >> updated_core
