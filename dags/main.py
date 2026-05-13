@@ -3,6 +3,7 @@ import pendulum
 from datetime import datetime, timedelta
 from Api.video_stats import getPlaylistId, getVideoResult, video_data
 from datawarehouse.dw import staging_table, core_table
+from data_quality.soda import yt_elt_dq
 
 local_tz= pendulum.timezone("Asia/Kuala_Lumpur")
 
@@ -50,3 +51,21 @@ with DAG(
 
     # Define dependencies
     updated_staging >> updated_core
+
+#variables
+staging_schema = "staging"
+core_schema = "core"
+with DAG(
+    dag_id= 'data_quality_check',
+    default_args=default_args,
+    description = 'DAG para verificar a qualidade dos dados na base de dados',
+    schedule = '0 15 * * *',
+    catchup=False
+) as dag:
+
+    # Define Tasks
+    soda_check_staging = yt_elt_dq(staging_schema)
+    soda_check_core = yt_elt_dq(core_schema)
+
+    # Define dependencies
+    soda_check_staging >> soda_check_core 
