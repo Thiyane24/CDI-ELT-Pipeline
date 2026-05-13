@@ -30,8 +30,8 @@ def test_dagbag(dagbag):
     print(f"Total DAGs loaded: {dagbag.size()}")
     
     expected_tasks={
-        'final_json': 3,
-        'updated_db': 2,
+        'final_json': 4,
+        'updated_db': 3,
         'data_quality_check': 2
     }
     print("--------------------------------------")
