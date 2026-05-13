@@ -35,10 +35,9 @@ jobs:
             - name: Build and push Docker image
               if: steps.changed-files-build.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
               run: |
-                      docker buildx build --push \
-                        --tag ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest \
-                        --tag ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.sha }} \
-                        .
+                docker buildx build --push \
+                  --tag ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest \
+                  --tag ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.sha }} .
 
     unit-and-integration-and-e2e-tests:
       runs-on: ubuntu-latest
@@ -57,12 +56,10 @@ jobs:
         METADATA_DATABASE_NAME: ${{ secrets.METADATA_DATABASE_NAME }}
         METADATA_DATABASE_PASSWORD: ${{ secrets.METADATA_DATABASE_PASSWORD }}
         METADATA_DATABASE_USERNAME: ${{ secrets.METADATA_DATABASE_USERNAME }}
-        POSTGRES_USER: ${{ secrets.POSTGRES_CONN_USERNAME }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_CONN_PASSWORD }}
-        POSTGRES_CONN_HOST: ${{ secrets.POSTGRES_CONN_HOST }}
-        POSTGRES_CONN_PASSWORD: ${{ secrets.POSTGRES_CONN_PASSWORD }}
-        POSTGRES_CONN_PORT: ${{ secrets.POSTGRES_CONN_PORT }}
         POSTGRES_CONN_USERNAME: ${{ secrets.POSTGRES_CONN_USERNAME }}
+        POSTGRES_CONN_PASSWORD: ${{ secrets.POSTGRES_CONN_PASSWORD }}
+        POSTGRES_CONN_HOST: postgres
+        POSTGRES_CONN_PORT: 5432
         AIRFLOW_UID: ${{ vars.AIRFLOW_UID }}
         CHANNEL_HANDLE: ${{ vars.CHANNEL_HANDLE }}
         DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE }}
@@ -81,7 +78,25 @@ jobs:
                 docker-compose.yaml
         - name: Set up Docker Compose
           if: steps.changed-files-tests.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
-          run: docker compose up -d
+          run: |
+            docker compose up -d || true
+            echo "Waiting for containers to initialise..."
+            sleep 60
+            echo "=== airflow-init logs ==="
+            docker logs airflow-init
+            echo "=== postgres logs ==="
+            docker logs postgres
+            echo "=== compose ps ==="
+            docker compose ps
+        - name: Check airflow-init success
+          if: steps.changed-files-tests.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+          run: |
+            STATUS=$(docker inspect airflow-init --format='{{.State.ExitCode}}')
+            if [ "$STATUS" != "0" ]; then
+              echo "airflow-init failed with exit code $STATUS"
+              exit 1
+            fi
+            echo "airflow-init completed successfully"
         - name: Run Unit and Integration Tests
           if: steps.changed-files-tests.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
           run: docker exec -t airflow-worker sh -c "pytest tests/ -v"
@@ -89,9 +104,9 @@ jobs:
           if: steps.changed-files-tests.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
           run: |
             DAG_NAMES=("produce_json" "update_db" "data_quality")
-            for DAG in "${DAG_NAMES[@]}"; do 
+            for DAG in "${DAG_NAMES[@]}"; do
               docker exec -t airflow-worker sh -c "airflow dags test $DAG"
             done
         - name: Tear down Docker Compose
-          if: steps.changed-files-tests.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+          if: always()
           run: docker compose down
