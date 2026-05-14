@@ -1,6 +1,6 @@
 # YT ELT Pipeline
 
-An automated ELT (Extract, Load, Transform) pipeline that pulls video stats from the YouTube Data API for **[Conversas de IT](https://www.youtube.com/@ConversasdeIT)** — a Mozambican tech podcast that brings together tech experts from across Mozambique to discuss the industry, careers, and technology. The pipeline extracts video metrics (views, likes, and comments), loads them into a PostgreSQL database, and transforms them — all orchestrated with Apache Airflow, containerised with Docker, and automated with a GitHub Actions CI/CD pipeline.
+An automated ELT (Extract, Load, Transform) pipeline that pulls video stats from the YouTube Data API for **[Conversas de IT](https://www.youtube.com/@ConversasdeIT)** a Mozambican tech podcast that brings together tech experts from across Mozambique to discuss the industry, careers, and technology. The pipeline extracts video metrics (views, likes, and comments), loads them into a PostgreSQL database, and transforms them  all orchestrated with Apache Airflow, containerised with Docker, and automated with a GitHub Actions CI/CD pipeline.
 
 ![Pipeline Architecture](YT-ELT-Pipeline.png)
 
