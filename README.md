@@ -58,6 +58,7 @@ The pipeline is structured in three layers:
 The GitHub Actions pipeline has two jobs:
 
 1. **build-and-push-image** Builds the custom Airflow Docker image and pushes it to DockerHub on every push
+
 2.**unit-and-integration-and-e2e-tests**  Spins up the full Docker Compose stack and runs Pytest unit/integration tests and Airflow DAG end-to-end tests
 
 ---
